@@ -3,6 +3,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
+import dash_daq as daq
 from dash_table.Format import Format
 
 # ---- 01. map layout ------
@@ -17,7 +18,7 @@ map_layout = {
             'height': 800,
             'yaxis': {'title': 'Latitude'},
             'xaxis': {'title': 'Longitude'},
-            'margin': {"r": 0, "t": 0, "l": 3, "b": 0}
+            'margin': {"r": 0, "t": 0, "l": 5, "b": 0}
         }
 map_data = [{'name': "events",
              'marker': {
@@ -96,4 +97,37 @@ mode_button = dcc.RadioItems(
     ]
 )
 
-# ---- 06. date range slider
+# ---- 06. mode switch
+mode_switch = daq.BooleanSwitch(
+    id='mode_switch',
+    on=False,
+    label='Instant Update',
+    labelPosition='top',
+),
+
+# ---- 07. Icon nob
+icon_nob = daq.Knob(
+    label="icon_scale",
+    size=100,
+    value=5,
+    max=5,
+    scale={'start': 0, 'labelInterval': 1, 'interval': 1}
+)
+
+# ---- 08. Tabs
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#119DFF',
+    'color': 'white',
+    'padding': '6px'
+}
+idx_tabs = dcc.Tabs(id="index_page_tab", value='earthquakes', children=[
+    dcc.Tab(label='earthquakes', value='earthquakes', style=tab_style, selected_style=tab_selected_style),
+    dcc.Tab(label='stations', value='stations', style=tab_style, selected_style=tab_selected_style),
+])
