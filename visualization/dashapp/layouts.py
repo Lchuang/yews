@@ -5,6 +5,8 @@ import dash_html_components as html
 import dash_table
 import dash_daq as daq
 from dash_table.Format import Format
+import datetime
+
 
 # ---- 01. map layout ------
 map_layout = {
@@ -20,7 +22,8 @@ map_layout = {
             'xaxis': {'title': 'Longitude'},
             'margin': {"r": 0, "t": 0, "l": 5, "b": 0}
         }
-map_data = [{'name': "events",
+map_data = [
+            {'name': "events",
              'marker': {
                 'opacity': 0.8,
                 'colorscale': 'Portland',
@@ -36,7 +39,21 @@ map_data = [{'name': "events",
                                  '<br><b>%{text}</b>'
                                  '<br><b>M: %{marker.size:.f}</b>'
                                  '<br><b>Phase: %{marker.color:.f}</b>'
-             }]
+             },
+            {'name': "stations",
+             'marker': {
+                'color': 'rgb(0, 0, 0)',
+                'size': 9,
+                'opacity': 1,
+                'symbol': 'triangle',
+                'line': {'color': 'rgb(0, 0, 0)'},
+             },
+             'type': 'scattermapbox',
+             'showlegend': False,
+             'hovertemplate': '(%{lat:.2f}, %{lon:.2f})'
+                              '<br><b>%{text}</b>'
+             },
+        ]
 geomap_layout = dcc.Graph(id='map', figure={
         'layout': map_layout,
         'data': map_data
@@ -83,6 +100,12 @@ eqs_table_layout = dash_table.DataTable(id='table',
                                         filter_action='native',
                                         page_size=50,
                                         )
+# ---- 04. phase catalog drop-down list
+phase_loc_layout = dcc.Dropdown(id='phase_loc_dw',
+                              options=[],
+                              placeholder='select an earthquake phase catalog',
+                              multi=True
+                              )
 # ---- 04. station catalog drop-down list
 sta_loc_layout = dcc.Dropdown(id='sta_loc_dw',
                               options=[],
@@ -129,5 +152,36 @@ tab_selected_style = {
 }
 idx_tabs = dcc.Tabs(id="index_page_tab", value='earthquakes', children=[
     dcc.Tab(label='earthquakes', value='earthquakes', style=tab_style, selected_style=tab_selected_style),
-    dcc.Tab(label='stations', value='stations', style=tab_style, selected_style=tab_selected_style),
+    dcc.Tab(label='phases', value='phases', style=tab_style, selected_style=tab_selected_style),
+    dcc.Tab(label='stations', value='stations', style=tab_style, selected_style=tab_selected_style)
 ])
+
+# ---- 09. date-time picker
+index_date_picker = dcc.DatePickerRange(
+    id='idx_dtp',
+    display_format='M-D-Y'
+)
+# ---- button css
+# ---- 10.analysis button
+view_waveform_evt = html.A(
+    id='view_event_wf',
+    children=html.Button('View Event Waveform', type='submit', id='evtwf_button'),
+    href='http://www.yahoo.com',
+    target='_blank'
+)
+# ---- 11. catalog analysis button
+view_events_sta = html.A(
+    children=html.Button(
+        'Analyse Catalog', type='submit', id='evt_button'),
+    id='ana_eq_cata',
+    href='http://www.google.com',
+    target='_blank'
+)
+# ---- 12. view continuous data
+view_waveform_cont = html.A(
+    children=html.Button(
+        'View All Waveform', type='submit', id='cont_button'),
+    id='view_cont_wf',
+    href='/apps/Continuous_WF',
+    target='_blank',
+)
