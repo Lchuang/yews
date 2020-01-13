@@ -19,3 +19,117 @@ input[type="button"] {
   border: 1px solid #bbb;
   cursor: pointer;
   box-sizing: border-box; }
+
+.geomap_background_canvas {
+  height: 800px;
+  automargin: true;
+}
+
+.geomap_drop_down {
+  height: 20%;
+  width: 100%;
+  display: inline-block;
+  automargin: true;
+}
+
+.geomap_left_block{
+  height: 100%;
+  width: 30%;
+  backgroundColor: rgba(251,251,251,1);
+  display: inline-block;
+  automargin: true;
+  vertical-align: top;
+}
+
+.geomap_map_area{
+  height: 800;
+  width: 70%;
+  display: inline-block;
+  automargin: true;
+  vertical-align: top;
+}
+
+.geomap_showtexts{
+  height: 30%;
+  width: 100%;
+  display: inline-block;
+  backgroundColor: white;
+  automargin: true;
+}
+
+.geomap_one_button{
+  height: 100%;
+  width: 33.3%;
+  display: inline-block;
+  vertical-align: top;
+  automargin: true;
+}
+
+.timepickers {
+  height: 100%;
+  width: 33%;
+  position: relative;
+  top:50px;
+  display: inline-block;
+  vertical-align: bottom;
+  automargin: true;
+}
+
+.cont_date_picker{
+ height: 100%;
+ width: 100%;
+ top:25px;
+ position: relative;
+ left: 25%;
+ display: inline-block;
+ vertical-align: top;
+ automargin: true;
+}
+
+.datetimes_block {
+  height: 100%;
+  width: 48%;
+  display: inline-block;
+  vertical-align: top;
+  automargin: true;
+}
+
+.filternumber {
+  height: 100%;
+  width: 48%;
+  position: relative;
+  top: 25px;
+  display: inline-block;
+  vertical-align: top;
+  automargin: true;
+  backgroundColor: gray;
+}
+
+.cont_wf_display_bg {
+  width: 69%;
+  height: 100%;
+  display: inline-block;
+  automargin: true;
+  vertical-align: top;
+  background-color: rgba(0,0,51,1);
+  float: right;
+}
+
+.cont_control_display_title {
+  padding-left: 40px;
+  color: white;
+  font-style: normal;
+  font-size: 30px;
+  font-weight: 350;
+}
+
+.cont_control_display_left {
+ display: inline-block;
+ width:40%;
+ height:100%;
+ font-size: 20px;
+ vertical-align: top;
+ color: gray;
+ padding-left: 40px;
+ text-align: left;
+}

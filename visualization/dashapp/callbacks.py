@@ -1,16 +1,50 @@
 #!/Users/lindsaychuang/miniconda3/envs/obspy/bin/python
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
+import plotly.graph_objects as go
 from funcs import *
 from app import app
 import glob
 from obspy import UTCDateTime
 import datetime
 import pandas as pd
+from layouts import Cont_control_tab, Cont_N_tab, Cont_E_tab, Cont_Z_tab, Cont_NEZ_tab
+
+# ---- set some path
+path_cont_wf = '../waveform/continuous'
+deployment_out_pt = '../deployment'
+path_station_cata = '../station_catalog'
+
+# ---- 02. callback for continuous waveform path ----
+@app.callback(
+    Output("cont_wf_pt", "options"),
+    [Input("cont_wf_pt", "search_value")],
+)
+def update_options(search_value):
+    print(f'set waveform root path at {path_cont_wf}')
+    options = []
+    cata_list = glob.glob(f'{path_cont_wf}/*')
+    for lst in cata_list:
+        lst = lst.split('/')[-1]
+        options.append({'label': lst, 'value': lst})
+    return options
+
+# ---- 02. callback for continuous waveform path ----
+@app.callback(
+    Output("deployment_pt", "options"),
+    [Input("deployment_pt", "search_value")],
+)
+def update_options(search_value):
+    print(f'set deployment root path at {deployment_out_pt}')
+    options = []
+    cata_list = glob.glob(f'{deployment_out_pt}/*')
+    for lst in cata_list:
+        lst = lst.split('/')[-1]
+        options.append({'label': lst, 'value': lst})
+    return options
 
 # ---- 02. callback for station catalog search ----
-path_station_cata = '../station_catalog'
 @app.callback(
     Output("sta_loc_dw", "options"),
     [Input("sta_loc_dw", "search_value")],
@@ -147,6 +181,7 @@ def updatemap(on_off, eq_cata, sta_cata):
     else:
         return {'data': map_data, 'layout': map_layout}
 
+
 @app.callback(Output('url', 'value'),
               [Input('cont_button', 'on_clicks'), Input('view_cont_wf', 'href'),
                Input('evt_button', 'on_clicks'), Input('ana_eq_cata', 'href'),
@@ -161,4 +196,87 @@ def change_url(cont, cont_link, evt, evt_link, evtwf, evtf_link):
     else:
         return '/'
 
+# ---- cont_date_picker callback
+@app.callback(
+    [Output('cont_dtp', 'date'), Output('hour_inout', 'value'),
+     Output('min_inout', 'value'), Output('sec_inout', 'value')],
+    [Input('mode_switch', 'on'), Input('eq_loc_dw', 'value')])
+def set_initial_datetime(on_off, eq_cata):
+    if on_off is True and eq_cata is not None and len(eq_cata) >= 1:
+        earlist, latest, total_event_number = quick_analysis_eq_catalog(path_earthquake_cata, eq_cata)
+        return [str(earlist), earlist.hour, earlist.minute, earlist.second]
+    else:
+        nowt = datetime.datetime.now()
+        return [str(nowt), nowt.hour, nowt.minute, nowt.second]
 
+
+# ---- cont tab for controlling
+@app.callback(
+    Output('cont_wf_display_content', 'children'),
+    [Input('cont_wf_tabs', 'value')])
+def render_cont_wf_display_tab(tab):
+    if tab == "N":
+        return Cont_N_tab
+    elif tab == "E":
+        return Cont_E_tab
+    elif tab == "Z":
+        return Cont_Z_tab
+    elif tab == "NEZ":
+        return Cont_NEZ_tab
+
+# ---- update N component waveform
+@app.callback(
+    [Output('N_comp_wfs', 'figure'),
+     Output('E_comp_wfs', 'figure'),
+     Output('Z_comp_wfs', 'figure'),
+     Output('NEZ_comp_wfs', 'figure')],
+    [Input('mode_switch', 'on'),
+     Input('cont_wf_tabs', 'value'),
+     Input('cont_dtp', 'date'),
+     Input('hour_inout', 'value'),
+     Input('min_inout', 'value'),
+     Input('sec_inout', 'value'),
+     Input('win_nob', 'value'),
+     Input('filter_type', 'value'),
+     Input('filter_low', 'value'),
+     Input('filter_high', 'value'),
+     Input('norm_control', 'value'),
+     Input('cont_wf_pt', 'value'),
+     Input('deployment_pt', 'value'),
+     Input('sta_loc_dw', 'value')]
+)
+def update_graph(on_off, NEZ, date, hour, min, sec, win, filter, lf, hf, norm, cont_p, depl_p, stalst):
+    date = date.split(' ')[0]
+    year = int(date.split('-')[0])
+    month = int(date.split('-')[1])
+    day = int(date.split('-')[2])
+    btime = UTCDateTime(year, month, day, hour, min, sec)
+    etime = btime + win * 60
+    wf_path = f'{path_cont_wf}/{cont_p}/{year}/{year}{month:02d}{day:02d}'
+    if on_off is True and stalst is not None and len(stalst) >= 1:
+        st_path = f'{path_station_cata}/{stalst[0]}'
+        sta_lst = pd.read_csv(st_path).station.values
+        if NEZ == 'N':
+            print("loading waveform")
+            st = load_wfs(wf_path, sta_lst, btime, etime, 'N')
+        if NEZ == 'E':
+            print("loading waveform")
+            st = load_wfs(wf_path, sta_lst, btime, etime, 'E')
+        if NEZ == 'Z':
+            print("loading waveform")
+            st = load_wfs(wf_path, sta_lst, btime, etime, 'Z')
+        if NEZ == 'NEZ':
+            print("loading waveform")
+            st = load_wfs(wf_path, sta_lst, btime, etime, 'All')
+        print(len(st))
+        if len(st) >= 1:
+            st = filters(st, filter, lf, hf)
+            st = norm_wfs(st, norm)
+            objs = wrap_wfs(st)
+            print("finish loading waveform")
+            objs.layout = {'height': len(st)*50, 'yaxis': {'autorange': "reversed"}, 'hovermode': 'closest'}
+        else:
+            objs = go.Figure()
+    else:
+        objs = go.Figure()
+    return [objs, objs, objs, objs]

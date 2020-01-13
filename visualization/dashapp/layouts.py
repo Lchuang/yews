@@ -8,6 +8,7 @@ from dash_table.Format import Format
 import datetime
 
 
+
 # ---- 01. map layout ------
 map_layout = {
             'mapbox': {
@@ -112,6 +113,12 @@ sta_loc_layout = dcc.Dropdown(id='sta_loc_dw',
                               placeholder='select a station catalog',
                               multi=True
                               )
+# ---- 06. continuous waveform path
+deployment_path = dcc.Dropdown(id='deployment_pt',
+                              options=[],
+                              placeholder='select deployment output path',
+                              multi=False
+                            )
 # ---- 05. mode radio buttons
 mode_button = dcc.RadioItems(
     options=[
@@ -130,11 +137,12 @@ mode_switch = daq.BooleanSwitch(
 
 # ---- 07. Icon nob
 icon_nob = daq.Knob(
-    label="icon_scale",
+    label="Display length (mins)",
     size=100,
     value=5,
     max=5,
-    scale={'start': 0, 'labelInterval': 1, 'interval': 1}
+    scale={'start': 0, 'labelInterval': 1, 'interval': 0.5},
+    id="win_nob"
 )
 
 # ---- 08. Tabs
@@ -157,9 +165,45 @@ idx_tabs = dcc.Tabs(id="index_page_tab", value='earthquakes', children=[
 ])
 
 # ---- 09. date-time picker
-index_date_picker = dcc.DatePickerRange(
-    id='idx_dtp',
-    display_format='M-D-Y'
+cont_date_picker = dcc.DatePickerSingle(
+    id='cont_dtp',
+    display_format='M-D-Y',
+)
+
+# ---- 10. time input
+cont_hours_input = daq.NumericInput(
+    id='hour_inout',
+    max=23,
+    value=8,
+    min=0,
+    label='Hour'
+)
+cont_minutes_input = daq.NumericInput(
+    id='min_inout',
+    max=59,
+    value=20,
+    min=0,
+    label='Min'
+)
+cont_seconds_input = daq.NumericInput(
+    id='sec_inout',
+    max=59,
+    value=30,
+    min=0,
+    label='Sec'
+)
+
+# ---- 11. Time range slider
+time_slider = dcc.RangeSlider(
+    id="time_slider",
+    min=0,
+    max=86400,
+    step=86400,
+    value=[0, 86400],
+    marks={i: f'{i}'
+           for i in range(0, 86400, 10000)
+           }
+
 )
 # ---- button css
 # ---- 10.analysis button
@@ -185,3 +229,86 @@ view_waveform_cont = html.A(
     href='/apps/Continuous_WF',
     target='_blank',
 )
+# ---- 13. radio item
+cont_filter_radio = dcc.RadioItems(
+    options=[
+        {'label': 'raw', 'value': 'raw'},
+        {'label': 'bandpass', 'value': 'bandpass'},
+        {'label': 'highpass', 'value': 'highpass'},
+        {'label': 'lowpass', 'value': 'lowpass'},
+    ],
+    value='bandpass',
+    id='filter_type'
+)
+# ---- 14. filer
+cont_filter_low = daq.NumericInput(
+    id='filter_low',
+    max=50,
+    value=2,
+    min=0.001,
+    label='Low F',
+    labelPosition='top',
+)
+
+cont_filter_high = daq.NumericInput(
+    id='filter_high',
+    max=100,
+    value=8,
+    min=0.001,
+    label='High F',
+    labelPosition='top',
+)
+# ---- normalization option
+cont_control_norm = dcc.Dropdown(
+    id='norm_control',
+    options=[
+        {'label': 'Original Scale', 'value': 'Original Scale'},
+        {'label': 'Normalize', 'value': 'Normalize'},
+    ],
+    placeholder='select normalization style',
+    multi=False,
+    value="Normalize"
+)
+# ---- waveform source option
+cont_wf_path = dcc.Dropdown(id='cont_wf_pt',
+                              options=[],
+                              placeholder='select continuous waveform path',
+                              multi=False
+                            )
+# ---- 17. Tab control content
+Cont_control_tab = html.Div([
+    html.P("Settings for waveform display", className="cont_control_display_title"),
+    html.Div([
+        html.P("Waveform Normalization Mode"),
+        html.Div(cont_control_norm),
+        html.P("Select Continuous Waveform Source"),
+        html.Div(cont_wf_path),
+        html.P('Select CPIC Deployment Source'),
+        html.Div(deployment_path),
+    ], className="cont_control_display_left")
+])
+# ---- 15. Continuous waveform display
+cont_wf_tabs = dcc.Tabs(id="cont_wf_tabs", value='Control',
+                        children=[
+                            dcc.Tab(label='N', value='N', style=tab_style, selected_style=tab_selected_style),
+                            dcc.Tab(label='E', value='E', style=tab_style, selected_style=tab_selected_style),
+                            dcc.Tab(label='Z', value='Z', style=tab_style, selected_style=tab_selected_style),
+                            dcc.Tab(label='NEZ', value='NEZ', style=tab_style, selected_style=tab_selected_style),
+                            dcc.Tab(Cont_control_tab, label='Control', value='Control', style=tab_style, selected_style=tab_selected_style)
+                        ])
+# ---- 16. cont joy stick
+browse_wf = daq.Joystick(
+        id='move_handle',
+        label="Browse waveform",
+        angle=0,
+        size=60,
+    ),
+# ---- 18. Tab N control content
+Cont_N_tab = dcc.Loading(
+    id='loadN', children=html.Div([dcc.Graph(id='N_comp_wfs')]))
+Cont_E_tab = dcc.Loading(
+    id='loadE', children=html.Div([dcc.Graph(id='E_comp_wfs')]))
+Cont_Z_tab = dcc.Loading(
+    id='loadZ', children=html.Div([dcc.Graph(id='Z_comp_wfs')]))
+Cont_NEZ_tab = dcc.Loading(
+    id='loadNEZ', children=html.Div([dcc.Graph(id='NEZ_comp_wfs')]))
